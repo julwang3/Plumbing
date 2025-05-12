@@ -1,11 +1,11 @@
 // Pin configuration
 const int LED_PIN = 46;
-const int BUZZER_PIN = 36;
-const int VIBRATION_PIN = 26;
-const int HALL_SENSOR_PIN = A4;  // Analog hall sensor input
+const int BUZZER_PIN = 32;
+const int VIBRATION_PIN = 22;
+const int HALL_SENSOR_PIN = A0;  // Analog hall sensor input
 
-// Threshold for analog hall sensor (tune as needed)
-const int HALL_THRESHOLD = 20;
+// Threshold for detecting significant change
+const int HALL_DELTA_THRESHOLD = 50;  // Adjust based on your sensor's sensitivity
 
 enum GameState {
   WAITING_FOR_PLUG,
@@ -17,35 +17,50 @@ GameState state = WAITING_FOR_PLUG;
 unsigned long stateStartTime = 0;
 unsigned char playingVictory = false;
 
+bool isPlugged = false;
+unsigned char baselineHallValue = '\0';
+
 void setup() {
   pinMode(LED_PIN, OUTPUT);
-  pinMode(BUZZER_PIN, OUTPUT);  // Required for tone(), even though tone handles PWM
+  pinMode(BUZZER_PIN, OUTPUT);
   pinMode(VIBRATION_PIN, OUTPUT);
-  pinMode(HALL_SENSOR_PIN, INPUT);
+  pinMode(HALL_SENSOR_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
   Serial.println("Game started.");
+
+  // Establish initial baseline (could also average multiple readings)
+  baselineHallValue = analogRead(HALL_SENSOR_PIN);
+  Serial.print("Baseline Hall value: ");
+  Serial.println(baselineHallValue);
 }
 
 void loop() {
-  int hallValue = analogRead(HALL_SENSOR_PIN);
-  bool isPlugged = hallValue < HALL_THRESHOLD;
+  unsigned char hallValue = analogRead(HALL_SENSOR_PIN);
+  int delta = abs(hallValue - baselineHallValue);
+  if (baselineHallValue != '\0' && delta > HALL_DELTA_THRESHOLD)
+  {
+    isPlugged = !isPlugged;
+  }
+  baselineHallValue = hallValue;
 
   Serial.print("Hall sensor value: ");
-  Serial.println(hallValue);
+  Serial.print(hallValue);
+  Serial.print(" | Δ: ");
+  Serial.println(delta);
+  if (isPlugged) Serial.println("PLUGGED!");
 
   unsigned long now = millis();
 
   switch (state) {
     case WAITING_FOR_PLUG: {
-      // Blink LED and beep buzzer
       digitalWrite(VIBRATION_PIN, HIGH);
       unsigned long blinkPhase = now % 1000;
       bool blink = blinkPhase < 100;
 
       digitalWrite(LED_PIN, blink);
       if (blink) {
-        tone(BUZZER_PIN, 1000);  // 1kHz beep
+        tone(BUZZER_PIN, 1000);
       } else {
         noTone(BUZZER_PIN);
       }
@@ -67,6 +82,7 @@ void loop() {
         Serial.println("Plug removed too early.");
         state = WAITING_FOR_PLUG;
         noTone(BUZZER_PIN);
+        Serial.println("Resetting baseline.");
       } else if (now - stateStartTime >= 2000) {
         Serial.println("Hole plugged successfully!");
         state = PLUGGED;
@@ -94,6 +110,8 @@ void loop() {
       if (now - stateStartTime >= 10000) {
         Serial.println("Restarting game.");
         noTone(BUZZER_PIN);
+        baselineHallValue = analogRead(HALL_SENSOR_PIN);  // Reset baseline before next round
+        Serial.println("New baseline recorded.");
         state = WAITING_FOR_PLUG;
       }
       break;
