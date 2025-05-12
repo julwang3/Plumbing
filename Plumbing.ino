@@ -1,8 +1,8 @@
 // Pin configuration
-const int LED_PIN = 46;
-const int BUZZER_PIN = 32;
-const int VIBRATION_PIN = 22;
-const int HALL_SENSOR_PIN = A0;  // Analog hall sensor input
+const int LED_PIN = 49;
+const int BUZZER_PIN = 35;
+const int VIBRATION_PIN = 25;
+const int HALL_SENSOR_PIN = A3;  // Analog hall sensor input
 
 // Threshold for detecting significant change
 const int HALL_DELTA_THRESHOLD = 50;  // Adjust based on your sensor's sensitivity
@@ -28,11 +28,6 @@ void setup() {
 
   Serial.begin(9600);
   Serial.println("Game started.");
-
-  // Establish initial baseline (could also average multiple readings)
-  baselineHallValue = analogRead(HALL_SENSOR_PIN);
-  Serial.print("Baseline Hall value: ");
-  Serial.println(baselineHallValue);
 }
 
 void loop() {
@@ -48,7 +43,10 @@ void loop() {
   Serial.print(hallValue);
   Serial.print(" | Δ: ");
   Serial.println(delta);
-  if (isPlugged) Serial.println("PLUGGED!");
+  if (isPlugged)
+  {
+    Serial.println("PLUGGED!");
+  }
 
   unsigned long now = millis();
 
@@ -88,6 +86,7 @@ void loop() {
         state = PLUGGED;
         stateStartTime = now;
         playingVictory = true;
+        isPlugged = false;
       }
       break;
     }
@@ -110,7 +109,6 @@ void loop() {
       if (now - stateStartTime >= 10000) {
         Serial.println("Restarting game.");
         noTone(BUZZER_PIN);
-        baselineHallValue = analogRead(HALL_SENSOR_PIN);  // Reset baseline before next round
         Serial.println("New baseline recorded.");
         state = WAITING_FOR_PLUG;
       }
