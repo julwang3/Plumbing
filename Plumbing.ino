@@ -162,7 +162,7 @@ struct PipeGame {
         // } else if (playingVictory) {
         //   tone(buzzerPin, 1000);
         // }
-        
+
         if (now - stateStartTime >= 5000) {
           isPlugged = false;
           state = WAITING_TO_START;
@@ -251,6 +251,19 @@ void loop() {
       allPipes[i]->update("Pipe", globalBlink);
     }
 
+    // 🔴 Check if active leaks exceed max allowed (6)
+    int activeLeaks = getCurrentActiveLeaks();
+    if (activeLeaks >= 5) {
+      Serial.print("TOO MANY LEAKS! Active leaks: ");
+      Serial.println(activeLeaks);
+      Serial.println("Game over — system overwhelmed.");
+      for (int j = 0; j < PIPE_COUNT; j++) {
+        allPipes[j]->forceLED(true);
+      }
+      gameStopped = true;
+      return; // Exit early
+    }
+
     // Handle game duration expiration
     if (!timeIsUp && (now - gameStartTime >= GAME_DURATION)) {
       timeIsUp = true;
@@ -258,16 +271,15 @@ void loop() {
       Serial.print("TIME'S UP! Total fixed leaks: ");
       Serial.println(fixedLeaksCount);
 
-      if (fixedLeaksCount < 15) {
+      if (fixedLeaksCount < 12) {
         Serial.println("Not enough leaks fixed — all LEDs ON.");
         for (int j = 0; j < PIPE_COUNT; j++) {
           allPipes[j]->forceLED(true);
         }
-        gameStopped = true; // Immediate end
+        gameStopped = true;
       } else {
         Serial.println("Enough leaks fixed — waiting for remaining leaks to be plugged...");
         pendingEnd = true;
-        // Don't stop yet — wait for all leaks to be plugged
       }
     }
 
@@ -281,4 +293,3 @@ void loop() {
     }
   }
 }
-
