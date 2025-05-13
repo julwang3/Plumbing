@@ -1,24 +1,29 @@
 // Pin configuration
-const int LED_PIN = 49;
-const int BUZZER_PIN = 35;
-const int VIBRATION_PIN = 25;
-const int HALL_SENSOR_PIN = A3;  // Analog hall sensor input
+const int LED_PIN = 50;
+const int BUZZER_PIN = 36;
+const int VIBRATION_PIN = 26;
+const int HALL_SENSOR_PIN = A4;  // Analog hall sensor input
 
 // Threshold for detecting significant change
 const int HALL_DELTA_THRESHOLD = 50;  // Adjust based on your sensor's sensitivity
 
 enum GameState {
+  WAITING_TO_START,   // New state
   WAITING_FOR_PLUG,
   PLUGGING,
   PLUGGED
 };
 
-GameState state = WAITING_FOR_PLUG;
+GameState state = WAITING_TO_START;
 unsigned long stateStartTime = 0;
 unsigned char playingVictory = false;
 
 bool isPlugged = false;
 unsigned char baselineHallValue = '\0';
+
+// Random cooldown timer variables
+unsigned long cooldownStartTime = 0;
+unsigned long cooldownDuration = 0;
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
@@ -27,12 +32,14 @@ void setup() {
   pinMode(HALL_SENSOR_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
-  Serial.println("Game started.");
+  randomSeed(analogRead(0)); // Seed randomness using unused analog pin
+  Serial.println("Game ready to start.");
 
-  // Establish initial baseline (could also average multiple readings)
-  baselineHallValue = analogRead(HALL_SENSOR_PIN);
-  Serial.print("Baseline Hall value: ");
-  Serial.println(baselineHallValue);
+  // Start cooldown immediately
+  cooldownStartTime = millis();
+  cooldownDuration = random(3000, 8000); // 3–8 seconds random delay
+  Serial.print("Cooldown duration: ");
+  Serial.println(cooldownDuration);
 }
 
 void loop() {
@@ -53,6 +60,22 @@ void loop() {
   unsigned long now = millis();
 
   switch (state) {
+    case WAITING_TO_START: {
+      digitalWrite(LED_PIN, LOW);
+      digitalWrite(BUZZER_PIN, LOW);
+      digitalWrite(VIBRATION_PIN, LOW);
+
+      if (now - cooldownStartTime >= cooldownDuration) {
+        Serial.println("Cooldown complete. Starting game.");
+        baselineHallValue = analogRead(HALL_SENSOR_PIN);
+        Serial.print("Baseline Hall value: ");
+        Serial.println(baselineHallValue);
+        stateStartTime = now;
+        state = WAITING_FOR_PLUG;
+      }
+      break;
+    }
+
     case WAITING_FOR_PLUG: {
       digitalWrite(VIBRATION_PIN, HIGH);
       unsigned long blinkPhase = now % 1000;
@@ -111,9 +134,13 @@ void loop() {
       if (now - stateStartTime >= 10000) {
         Serial.println("Restarting game.");
         noTone(BUZZER_PIN);
-        Serial.println("New baseline recorded.");
         isPlugged = false;
-        state = WAITING_FOR_PLUG;
+        state = WAITING_TO_START;
+
+        cooldownStartTime = millis();
+        cooldownDuration = random(3000, 8000);
+        Serial.print("New cooldown duration: ");
+        Serial.println(cooldownDuration);
       }
       break;
     }
