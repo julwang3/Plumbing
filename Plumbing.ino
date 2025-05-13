@@ -1,16 +1,35 @@
 // --- Pin Configuration ---
-
 // Pipe 1
 const int LED_PIN_1 = 46;
 const int BUZZER_PIN_1 = 32;
 const int VIBRATION_PIN_1 = 22;
 const int HALL_SENSOR_PIN_1 = A0;
-
 // Pipe 2
 const int LED_PIN_2 = 47;
 const int BUZZER_PIN_2 = 33;
 const int VIBRATION_PIN_2 = 23;
 const int HALL_SENSOR_PIN_2 = A1;
+// Pipe 3
+const int LED_PIN_3 = 48;
+const int BUZZER_PIN_3 = 34;
+const int VIBRATION_PIN_3 = 24;
+const int HALL_SENSOR_PIN_3 = A2;
+// Pipe 4 doesn't work.
+// Pipe 5
+const int LED_PIN_5 = 50;
+const int BUZZER_PIN_5 = 36;
+const int VIBRATION_PIN_5 = 26;
+const int HALL_SENSOR_PIN_5 = A4;
+// Pipe 6
+const int LED_PIN_6 = 51;
+const int BUZZER_PIN_6 = 37;
+const int VIBRATION_PIN_6 = 27;
+const int HALL_SENSOR_PIN_6 = A5;
+// Pipe 7
+const int LED_PIN_7 = 52;
+const int BUZZER_PIN_7 = 38;
+const int VIBRATION_PIN_7 = 28;
+const int HALL_SENSOR_PIN_7 = A6;
 
 // --- Constants ---
 const int HALL_DELTA_THRESHOLD = 50;  // Sensitivity threshold
@@ -149,6 +168,10 @@ struct PipeGame {
 // --- Pipe Instances ---
 PipeGame pipe1(LED_PIN_1, BUZZER_PIN_1, VIBRATION_PIN_1, HALL_SENSOR_PIN_1);
 PipeGame pipe2(LED_PIN_2, BUZZER_PIN_2, VIBRATION_PIN_2, HALL_SENSOR_PIN_2);
+PipeGame pipe3(LED_PIN_3, BUZZER_PIN_3, VIBRATION_PIN_3, HALL_SENSOR_PIN_3);
+PipeGame pipe5(LED_PIN_5, BUZZER_PIN_5, VIBRATION_PIN_5, HALL_SENSOR_PIN_5);
+PipeGame pipe6(LED_PIN_6, BUZZER_PIN_6, VIBRATION_PIN_6, HALL_SENSOR_PIN_6);
+PipeGame pipe7(LED_PIN_7, BUZZER_PIN_7, VIBRATION_PIN_7, HALL_SENSOR_PIN_7);
 
 // --- Arduino Setup ---
 void setup() {
@@ -156,11 +179,19 @@ void setup() {
   randomSeed(analogRead(0));
   pipe1.setupPins();
   pipe2.setupPins();
+  pipe3.setupPins();
+  pipe5.setupPins();
+  pipe6.setupPins();
+  pipe7.setupPins();
   Serial.println("Two-pipe game initialized.");
 }
 
 // --- Main Loop ---
 void loop() {
-  pipe1.update("Pipe 1");
-  pipe2.update("Pipe 2");
+  // pipe1.update("Pipe 1");
+  // pipe2.update("Pipe 2");
+  // pipe3.update("Pipe 3");
+  // pipe5.update("Pipe 5");
+  pipe6.update("Pipe 6");
+  pipe7.update("Pipe 7");
 }
