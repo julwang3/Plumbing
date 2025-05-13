@@ -251,18 +251,18 @@ void loop() {
       allPipes[i]->update("Pipe", globalBlink);
     }
 
-    // 🔴 Check if active leaks exceed max allowed (6)
-    int activeLeaks = getCurrentActiveLeaks();
-    if (activeLeaks >= 5) {
-      Serial.print("TOO MANY LEAKS! Active leaks: ");
-      Serial.println(activeLeaks);
-      Serial.println("Game over — system overwhelmed.");
-      for (int j = 0; j < PIPE_COUNT; j++) {
-        allPipes[j]->forceLED(true);
-      }
-      gameStopped = true;
-      return; // Exit early
-    }
+    // // 🔴 Check if active leaks exceed max allowed (6)
+    // int activeLeaks = getCurrentActiveLeaks();
+    // if (activeLeaks >= 5) {
+    //   Serial.print("TOO MANY LEAKS! Active leaks: ");
+    //   Serial.println(activeLeaks);
+    //   Serial.println("Game over — system overwhelmed.");
+    //   for (int j = 0; j < PIPE_COUNT; j++) {
+    //     allPipes[j]->forceLED(true);
+    //   }
+    //   gameStopped = true;
+    //   return; // Exit early
+    // }
 
     // Handle game duration expiration
     if (!timeIsUp && (now - gameStartTime >= GAME_DURATION)) {
