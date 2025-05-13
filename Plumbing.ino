@@ -4,7 +4,6 @@ const int LED_PIN_1 = 46;
 const int BUZZER_PIN_1 = 32;
 const int VIBRATION_PIN_1 = 22;
 const int HALL_SENSOR_PIN_1 = A0;
-
 // Pipe 2
 const int LED_PIN_2 = 47;
 const int BUZZER_PIN_2 = 33;
@@ -183,7 +182,7 @@ PipeGame pipe7(LED_PIN_7, BUZZER_PIN_7, VIBRATION_PIN_7, HALL_SENSOR_PIN_7);
 // --- Arduino Setup ---
 void setup() {
   Serial.begin(9600);
-  randomSeed(analogRead(0));
+  randomSeed(millis());
   pipe1.setupPins();
   pipe2.setupPins();
   pipe3.setupPins();
