@@ -4,6 +4,7 @@ const int LED_PIN_1 = 46;
 const int BUZZER_PIN_1 = 32;
 const int VIBRATION_PIN_1 = 22;
 const int HALL_SENSOR_PIN_1 = A0;
+
 // Pipe 2
 const int LED_PIN_2 = 47;
 const int BUZZER_PIN_2 = 33;
@@ -34,6 +35,11 @@ const int HALL_SENSOR_PIN_7 = A6;
 // --- Constants ---
 const int HALL_DELTA_THRESHOLD = 50;  // Sensitivity threshold
 
+// --- Global Blink Timing ---
+bool globalBlink = false;
+unsigned long lastBlinkToggle = 0;
+const unsigned long BLINK_INTERVAL = 100;  // Blink every 100 ms
+
 // --- Game States ---
 enum GameState {
   WAITING_TO_START,
@@ -58,6 +64,7 @@ struct PipeGame {
   unsigned long cooldownStartTime;
   unsigned long cooldownDuration;
 
+  // ✅ Constructor
   PipeGame(int led, int buzzer, int vibration, int hall)
     : ledPin(led), buzzerPin(buzzer), vibrationPin(vibration), hallPin(hall),
       state(WAITING_TO_START), stateStartTime(0), playingVictory(false),
@@ -65,12 +72,12 @@ struct PipeGame {
 
   void setupPins() {
     pinMode(ledPin, OUTPUT);
-    // pinMode(buzzerPin, OUTPUT);
-    // pinMode(vibrationPin, OUTPUT);
+    pinMode(buzzerPin, OUTPUT);
+    pinMode(vibrationPin, OUTPUT);
     pinMode(hallPin, INPUT_PULLUP);
 
     cooldownStartTime = millis();
-    cooldownDuration = random(3000, 12000);
+    cooldownDuration = random(3000, 30000);
 
     Serial.print("Cooldown for pin ");
     Serial.print(hallPin);
@@ -78,7 +85,7 @@ struct PipeGame {
     Serial.println(cooldownDuration);
   }
 
-  void update(const char* label) {
+  void update(const char* label, bool blinkState) {
     unsigned char hallValue = analogRead(hallPin);
     int delta = abs(hallValue - baselineHallValue);
 
@@ -112,8 +119,8 @@ struct PipeGame {
 
       case WAITING_FOR_PLUG:
         // digitalWrite(vibrationPin, HIGH);
-        digitalWrite(ledPin, (now % 1000 < 100) ? HIGH : LOW);
-        // (now % 1000 < 100) ? tone(buzzerPin, 1000) : noTone(buzzerPin);
+        digitalWrite(ledPin, blinkState ? HIGH : LOW);
+        // blinkState ? tone(buzzerPin, 1000) : noTone(buzzerPin);
         if (isPlugged) {
           state = PLUGGING;
           stateStartTime = now;
@@ -141,16 +148,16 @@ struct PipeGame {
         digitalWrite(ledPin, LOW);
         // digitalWrite(vibrationPin, LOW);
 
-        if ((now - stateStartTime) >= 300 && playingVictory) {
-          // noTone(buzzerPin);
-          playingVictory = false;
-        } else if ((now - stateStartTime) >= 200 && playingVictory) {
-          // tone(buzzerPin, 1000);
-        } else if ((now - stateStartTime) >= 100 && playingVictory) {
-          // noTone(buzzerPin);
-        } else if (playingVictory) {
-          // tone(buzzerPin, 1000);
-        }
+        // if ((now - stateStartTime) >= 300 && playingVictory) {
+        //   noTone(buzzerPin);
+        //   playingVictory = false;
+        // } else if ((now - stateStartTime) >= 200 && playingVictory) {
+        //   tone(buzzerPin, 1000);
+        // } else if ((now - stateStartTime) >= 100 && playingVictory) {
+        //   noTone(buzzerPin);
+        // } else if (playingVictory) {
+        //   tone(buzzerPin, 1000);
+        // }
 
         if (now - stateStartTime >= 10000) {
           Serial.print(label); Serial.println(" restarting.");
@@ -158,7 +165,7 @@ struct PipeGame {
           isPlugged = false;
           state = WAITING_TO_START;
           cooldownStartTime = millis();
-          cooldownDuration = random(4000, 12000);
+          cooldownDuration = random(4000, 20000);
         }
         break;
     }
@@ -188,10 +195,18 @@ void setup() {
 
 // --- Main Loop ---
 void loop() {
-  pipe1.update("Pipe 1");
-  pipe2.update("Pipe 2");
-  pipe3.update("Pipe 3");
-  pipe5.update("Pipe 5");
-  pipe6.update("Pipe 6");
-  pipe7.update("Pipe 7");
+  unsigned long now = millis();
+
+  // 🔄 Update global blink state
+  if (now - lastBlinkToggle >= BLINK_INTERVAL) {
+    globalBlink = !globalBlink;
+    lastBlinkToggle = now;
+  }
+
+  pipe1.update("Pipe 1", globalBlink);
+  pipe2.update("Pipe 2", globalBlink);
+  pipe3.update("Pipe 3", globalBlink);
+  pipe5.update("Pipe 5", globalBlink);
+  pipe6.update("Pipe 6", globalBlink);
+  pipe7.update("Pipe 7", globalBlink);
 }
