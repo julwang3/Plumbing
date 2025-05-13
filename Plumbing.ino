@@ -188,10 +188,10 @@ void setup() {
 
 // --- Main Loop ---
 void loop() {
-  // pipe1.update("Pipe 1");
-  // pipe2.update("Pipe 2");
-  // pipe3.update("Pipe 3");
-  // pipe5.update("Pipe 5");
+  pipe1.update("Pipe 1");
+  pipe2.update("Pipe 2");
+  pipe3.update("Pipe 3");
+  pipe5.update("Pipe 5");
   pipe6.update("Pipe 6");
   pipe7.update("Pipe 7");
 }
